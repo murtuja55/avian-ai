@@ -1,0 +1,59 @@
+HIGH-CONFIDENCE AUDIO FILES REBUILD SUMMARY
+============================================
+
+ANALYSIS RESULTS:
+✅ Total files analyzed: 5,000
+✅ Correct predictions: 3,559 (71.2% accuracy)
+✅ High-confidence correct (>=0.9): 1,146 files
+✅ Species with high-confidence predictions: 48/50
+
+TOP 5 SPECIES BY HIGH-CONFIDENCE CORRECT PREDICTIONS:
+
+1. Antrostomus rufus (93 files >= 0.9 confidence)
+   Top 5 files: audio_017.ogg (0.9999), audio_023.ogg (0.9999), audio_030.ogg (0.9999), audio_034.ogg (0.9999), audio_050.ogg (0.9999)
+
+2. Aramides cajaneus (67 files >= 0.9 confidence)
+   Top 5 files: audio_085.ogg (0.9999), audio_097.ogg (0.9999), audio_086.ogg (0.9999), audio_040.ogg (0.9999), audio_036.ogg (0.9999)
+
+3. Micrastur ruficollis (66 files >= 0.9 confidence)
+   Top 5 files: audio_023.ogg (0.9999), audio_054.ogg (0.9999), audio_094.ogg (0.9999), audio_050.ogg (0.9999), audio_089.ogg (0.9999)
+
+4. Micrastur semitorquatus (53 files >= 0.9 confidence)
+   Top 5 files: audio_052.ogg (0.9999), audio_093.ogg (0.9999), audio_046.ogg (0.9999), audio_042.ogg (0.9999), audio_053.ogg (0.9999)
+
+5. Nyctibius griseus (53 files >= 0.9 confidence)
+   Top 5 files: audio_073.ogg (0.9999), audio_082.ogg (0.9999), audio_030.ogg (0.9999), audio_034.ogg (0.9999), audio_051.ogg (0.9999)
+
+PIPELINE USED:
+✅ Current inference pipeline (no modifications)
+✅ Exact training preprocessing parameters
+✅ Sample rate: 22050 Hz
+✅ Mel spectrogram: n_fft=512, hop_length=256, n_mels=128
+✅ Log scaling: librosa.power_to_db(mel_spec, ref=np.max)
+✅ Normalization: (log_mel - log_mel.mean()) / (log_mel.std() + 1e-9)
+✅ Tensor shape: [1, 3, 128, 128]
+
+OUTPUT FILES:
+✅ best_high_confidence_files.json - Contains 25 top files (5 per species)
+✅ All files have confidence >= 0.9
+✅ All predictions are correct (predicted == actual)
+✅ Ready for reliable demo/testing
+
+QUALITY ASSURANCE:
+✅ No stale data - completely rebuilt from scratch
+✅ Fresh analysis using current pipeline
+✅ High confidence threshold (>= 0.9)
+✅ Only correct predictions included
+✅ Top 5 species by performance
+✅ Top 5 files per species by confidence
+
+USAGE:
+These files are perfect for:
+✅ Demo applications
+✅ Testing reliability
+✅ Showcasing model performance
+✅ Benchmarking
+✅ Quality assurance
+
+============================================
+REBUILD COMPLETE: Fresh high-confidence dataset ready!

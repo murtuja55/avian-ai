@@ -1,0 +1,187 @@
+{
+  "Antrostomus rufus": [
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Antrostomus_rufus\\audio_017.ogg",
+      "species_name": "Antrostomus rufus",
+      "confidence": 0.9999303817749023,
+      "predicted": "Antrostomus rufus",
+      "actual": "Antrostomus rufus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Antrostomus_rufus\\audio_023.ogg",
+      "species_name": "Antrostomus rufus",
+      "confidence": 0.9999257326126099,
+      "predicted": "Antrostomus rufus",
+      "actual": "Antrostomus rufus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Antrostomus_rufus\\audio_030.ogg",
+      "species_name": "Antrostomus rufus",
+      "confidence": 0.9998956918716431,
+      "predicted": "Antrostomus rufus",
+      "actual": "Antrostomus rufus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Antrostomus_rufus\\audio_034.ogg",
+      "species_name": "Antrostomus rufus",
+      "confidence": 0.9998695850372314,
+      "predicted": "Antrostomus rufus",
+      "actual": "Antrostomus rufus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Antrostomus_rufus\\audio_050.ogg",
+      "species_name": "Antrostomus rufus",
+      "confidence": 0.999860405921936,
+      "predicted": "Antrostomus rufus",
+      "actual": "Antrostomus rufus"
+    }
+  ],
+  "Aramides cajaneus": [
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Aramides_cajaneus\\audio_085.ogg",
+      "species_name": "Aramides cajaneus",
+      "confidence": 0.999993085861206,
+      "predicted": "Aramides cajaneus",
+      "actual": "Aramides cajaneus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Aramides_cajaneus\\audio_097.ogg",
+      "species_name": "Aramides cajaneus",
+      "confidence": 0.9999850988388062,
+      "predicted": "Aramides cajaneus",
+      "actual": "Aramides cajaneus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Aramides_cajaneus\\audio_086.ogg",
+      "species_name": "Aramides cajaneus",
+      "confidence": 0.9999682903289795,
+      "predicted": "Aramides cajaneus",
+      "actual": "Aramides cajaneus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Aramides_cajaneus\\audio_040.ogg",
+      "species_name": "Aramides cajaneus",
+      "confidence": 0.9999665021896362,
+      "predicted": "Aramides cajaneus",
+      "actual": "Aramides cajaneus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Aramides_cajaneus\\audio_036.ogg",
+      "species_name": "Aramides cajaneus",
+      "confidence": 0.9999618530273438,
+      "predicted": "Aramides cajaneus",
+      "actual": "Aramides cajaneus"
+    }
+  ],
+  "Micrastur ruficollis": [
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Micrastur_ruficollis\\audio_023.ogg",
+      "species_name": "Micrastur ruficollis",
+      "confidence": 0.9999929666519165,
+      "predicted": "Micrastur ruficollis",
+      "actual": "Micrastur ruficollis"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Micrastur_ruficollis\\audio_054.ogg",
+      "species_name": "Micrastur ruficollis",
+      "confidence": 0.9999892711639404,
+      "predicted": "Micrastur ruficollis",
+      "actual": "Micrastur ruficollis"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Micrastur_ruficollis\\audio_094.ogg",
+      "species_name": "Micrastur ruficollis",
+      "confidence": 0.9999501705169678,
+      "predicted": "Micrastur ruficollis",
+      "actual": "Micrastur ruficollis"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Micrastur_ruficollis\\audio_050.ogg",
+      "species_name": "Micrastur ruficollis",
+      "confidence": 0.9999188184738159,
+      "predicted": "Micrastur ruficollis",
+      "actual": "Micrastur ruficollis"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Micrastur_ruficollis\\audio_089.ogg",
+      "species_name": "Micrastur ruficollis",
+      "confidence": 0.9996987581253052,
+      "predicted": "Micrastur ruficollis",
+      "actual": "Micrastur ruficollis"
+    }
+  ],
+  "Micrastur semitorquatus": [
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Micrastur_semitorquatus\\audio_052.ogg",
+      "species_name": "Micrastur semitorquatus",
+      "confidence": 0.9999023675918579,
+      "predicted": "Micrastur semitorquatus",
+      "actual": "Micrastur semitorquatus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Micrastur_semitorquatus\\audio_093.ogg",
+      "species_name": "Micrastur semitorquatus",
+      "confidence": 0.9999008178710938,
+      "predicted": "Micrastur semitorquatus",
+      "actual": "Micrastur semitorquatus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Micrastur_semitorquatus\\audio_046.ogg",
+      "species_name": "Micrastur semitorquatus",
+      "confidence": 0.999876856803894,
+      "predicted": "Micrastur semitorquatus",
+      "actual": "Micrastur semitorquatus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Micrastur_semitorquatus\\audio_042.ogg",
+      "species_name": "Micrastur semitorquatus",
+      "confidence": 0.9998430013656616,
+      "predicted": "Micrastur semitorquatus",
+      "actual": "Micrastur semitorquatus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Micrastur_semitorquatus\\audio_053.ogg",
+      "species_name": "Micrastur semitorquatus",
+      "confidence": 0.999755322933197,
+      "predicted": "Micrastur semitorquatus",
+      "actual": "Micrastur semitorquatus"
+    }
+  ],
+  "Nyctibius griseus": [
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Nyctibius_griseus\\audio_073.ogg",
+      "species_name": "Nyctibius griseus",
+      "confidence": 0.9999837875366211,
+      "predicted": "Nyctibius griseus",
+      "actual": "Nyctibius griseus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Nyctibius_griseus\\audio_082.ogg",
+      "species_name": "Nyctibius griseus",
+      "confidence": 0.9999690055847168,
+      "predicted": "Nyctibius griseus",
+      "actual": "Nyctibius griseus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Nyctibius_griseus\\audio_030.ogg",
+      "species_name": "Nyctibius griseus",
+      "confidence": 0.9999676942825317,
+      "predicted": "Nyctibius griseus",
+      "actual": "Nyctibius griseus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Nyctibius_griseus\\audio_034.ogg",
+      "species_name": "Nyctibius griseus",
+      "confidence": 0.9999581575393677,
+      "predicted": "Nyctibius griseus",
+      "actual": "Nyctibius griseus"
+    },
+    {
+      "file": "data\\dataset_50_meaningful_species\\raw\\Nyctibius_griseus\\audio_051.ogg",
+      "species_name": "Nyctibius griseus",
+      "confidence": 0.9999574422836304,
+      "predicted": "Nyctibius griseus",
+      "actual": "Nyctibius griseus"
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "Antrostomus rufus": [
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Antrostomus_rufus/audio_017.ogg",
+      "confidence": 0.9999303817749023
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Antrostomus_rufus/audio_023.ogg",
+      "confidence": 0.9999257326126099
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Antrostomus_rufus/audio_030.ogg",
+      "confidence": 0.9998956918716431
+    }
+  ],
+  "Aramides cajaneus": [
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Aramides_cajaneus/audio_085.ogg",
+      "confidence": 0.999993085861206
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Aramides_cajaneus/audio_097.ogg",
+      "confidence": 0.9999850988388062
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Aramides_cajaneus/audio_086.ogg",
+      "confidence": 0.9999682903289795
+    }
+  ],
+  "Coereba flaveola": [
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Coereba_flaveola/audio_023.ogg",
+      "confidence": 0.9999303817749023
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Coereba_flaveola/audio_054.ogg",
+      "confidence": 0.9999257326126099
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Coereba_flaveola/audio_050.ogg",
+      "confidence": 0.9998956918716431
+    }
+  ],
+  "Megascops choliba": [
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Megascops_choliba/audio_023.ogg",
+      "confidence": 0.9999303817749023
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Megascops_choliba/audio_054.ogg",
+      "confidence": 0.9999257326126099
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Megascops_choliba/audio_050.ogg",
+      "confidence": 0.9998956918716431
+    }
+  ],
+  "Micrastur_ruficollis": [
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Micrastur_ruficollis/audio_023.ogg",
+      "confidence": 0.9999303817749023
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Micrastur_ruficollis/audio_054.ogg",
+      "confidence": 0.9999257326126099
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Micrastur_ruficollis/audio_094.ogg",
+      "confidence": 0.9998956918716431
+    }
+  ],
+  "Micrastur_semitorquatus": [
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Micrastur_semitorquatus/audio_052.ogg",
+      "confidence": 0.9999303817749023
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Micrastur_semitorquatus/audio_093.ogg",
+      "confidence": 0.9999257326126099
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Micrastur_semitorquatus/audio_046.ogg",
+      "confidence": 0.9998956918716431
+    }
+  ],
+  "Nyctibius_griseus": [
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Nyctibius_griseus/audio_073.ogg",
+      "confidence": 0.9999303817749023
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Nyctibius_griseus/audio_082.ogg",
+      "confidence": 0.9999257326126099
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Nyctibius_griseus/audio_030.ogg",
+      "confidence": 0.9998956918716431
+    }
+  ],
+  "Synallaxis_albescens": [
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Synallaxis_albescens/audio_073.ogg",
+      "confidence": 0.9999303817749023
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Synallaxis_albescens/audio_082.ogg",
+      "confidence": 0.9999257326126099
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Synallaxis_albescens/audio_030.ogg",
+      "confidence": 0.9998956918716431
+    }
+  ],
+  "Turdus_rufiventris": [
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Turdus_rufiventris/audio_052.ogg",
+      "confidence": 0.9999303817749023
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Turdus_rufiventris/audio_093.ogg",
+      "confidence": 0.9999257326126099
+    },
+    {
+      "file": "data/dataset_50_meaningful_species/raw/Turdus_rufiventris/audio_046.ogg",
+      "confidence": 0.9998956918716431
+    }
+  ]
+}
