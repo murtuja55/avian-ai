@@ -29,8 +29,9 @@ print(f"📁 BASE_DIR: {BASE_DIR}")
 app = Flask(__name__, static_folder='static')
 CORS(app)
 
-# Model download configuration with absolute paths
+# Model download configuration with absolute paths and fallback
 MODEL_URL = os.environ.get('MODEL_URL', 'https://github.com/murtuja55/avian-ai/releases/download/v1.0.0/best_model.pth')
+FALLBACK_MODEL_URL = 'https://github.com/murtuja55/avian-ai/releases/download/v1.0.0/best_model.pth'
 MODEL_DIR = os.path.join(BASE_DIR, "model")
 MODEL_PATH = os.path.join(MODEL_DIR, "best_model.pth")
 print(f"📁 MODEL_DIR: {MODEL_DIR}")
@@ -63,11 +64,23 @@ def download_model():
         os.makedirs(MODEL_DIR, exist_ok=True)
         print(f"📁 Model directory created/verified: {MODEL_DIR}")
         
-        # Download the model file
+        # Download the model file with retry logic
         print("🌐 Starting HTTP request...")
-        response = requests.get(MODEL_URL, stream=True, timeout=30)
-        response.raise_for_status()
-        print("✅ HTTP request successful")
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                print(f"🔄 Download attempt {attempt + 1}/{max_retries}")
+                response = requests.get(MODEL_URL, stream=True, timeout=60)
+                response.raise_for_status()
+                print("✅ HTTP request successful")
+                break
+            except Exception as e:
+                print(f"❌ Download attempt {attempt + 1} failed: {e}")
+                if attempt == max_retries - 1:
+                    raise e
+                print("⏳ Waiting 5 seconds before retry...")
+                import time
+                time.sleep(5)
         
         # Get file size for progress
         total_size = int(response.headers.get('content-length', 0))
@@ -100,8 +113,45 @@ def download_model():
         
     except Exception as e:
         print(f"❌ Failed to download model: {e}")
-        MODEL_LOADED = False
-        return False
+        
+        # Try fallback URL if primary fails
+        print("🔄 Trying fallback URL...")
+        try:
+            response = requests.get(FALLBACK_MODEL_URL, stream=True, timeout=60)
+            response.raise_for_status()
+            print("✅ Fallback HTTP request successful")
+            
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded = 0
+            
+            print(f"📥 Downloading model from fallback ({total_size / (1024*1024):.1f} MB)...")
+            
+            with open(MODEL_PATH, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        if total_size > 0:
+                            progress = (downloaded / total_size) * 100
+                            print(f"📥 Download progress: {progress:.1f}%", end='\r')
+            
+            print(f"\n✅ Model downloaded successfully from fallback: {MODEL_PATH}")
+            print(f"✅ Model size: {os.path.getsize(MODEL_PATH) / (1024*1024):.1f} MB")
+            
+            # Verify model was saved correctly
+            if os.path.exists(MODEL_PATH):
+                print("✅ Model saved correctly from fallback")
+                MODEL_LOADED = True
+                return True
+            else:
+                print("❌ Model NOT found after fallback download")
+                MODEL_LOADED = False
+                return False
+                
+        except Exception as fallback_error:
+            print(f"❌ Fallback download also failed: {fallback_error}")
+            MODEL_LOADED = False
+            return False
 
 def initialize_inference():
     """Initialize inference system after model is loaded"""
