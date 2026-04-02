@@ -1,5 +1,5 @@
 """
-Production API Server for Avian AI - Synchronous Model Loading
+Production API Server for Avian AI - 100% Render Ready
 Clean Flask API for bird sound classification
 """
 
@@ -11,7 +11,12 @@ import sys
 import uuid
 import tempfile
 import requests
+import threading
+import time
 from pathlib import Path
+
+# Add current directory to path
+sys.path.append('.')
 
 # Print Python version for debugging
 print(f"🐍 Python version: {sys.version}")
@@ -21,97 +26,165 @@ print(f"🐍 Python executable: {sys.executable}")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 print(f"📁 BASE_DIR: {BASE_DIR}")
 
-# Model configuration with absolute paths
+app = Flask(__name__, static_folder='static')
+CORS(app)
+
+# Model download configuration with absolute paths and fallback
+MODEL_URL = os.environ.get('MODEL_URL', 'https://github.com/murtuja55/avian-ai/releases/download/v1.0.0/best_model.pth')
+FALLBACK_MODEL_URL = 'https://github.com/murtuja55/avian-ai/releases/download/v1.0.0/best_model.pth'
 MODEL_DIR = os.path.join(BASE_DIR, "model")
 MODEL_PATH = os.path.join(MODEL_DIR, "best_model.pth")
-MODEL_URL = os.environ.get("MODEL_URL", "https://github.com/murtuja55/avian-ai/releases/download/v1.0.0/best_model.pth")
-
 print(f"📁 MODEL_DIR: {MODEL_DIR}")
 print(f"📁 MODEL_PATH: {MODEL_PATH}")
-print(f"📁 MODEL_URL: {MODEL_URL}")
+print(f"📁 Exists: {os.path.exists(MODEL_PATH)}")
+
+# Global inference variables
+INFERENCE_READY = False
+INFERENCE_SYSTEM = None
+MODEL_LOADED = False
 
 def download_model():
-    """Download model synchronously before server starts"""
-    os.makedirs(MODEL_DIR, exist_ok=True)
+    """Download model file if not exists"""
+    global MODEL_LOADED
+    
+    print(f"🔍 Checking model path: {MODEL_PATH}")
     
     if os.path.exists(MODEL_PATH):
-        print(f"✅ Model already exists at {MODEL_PATH}")
+        print(f"✅ Model already exists: {MODEL_PATH}")
         print(f"✅ Model size: {os.path.getsize(MODEL_PATH) / (1024*1024):.1f} MB")
+        MODEL_LOADED = True
         return True
     
-    print(f"📥 Downloading model from {MODEL_URL}")
+    print("📥 Model file not found, downloading...")
+    print(f"📥 Download URL: {MODEL_URL}")
     print(f"📥 Target path: {MODEL_PATH}")
     
     try:
-        print("🌐 Starting HTTP request...")
-        response = requests.get(MODEL_URL, stream=True, timeout=300)
-        response.raise_for_status()
-        print("✅ HTTP request successful")
+        # Create model directory if it doesn't exist (using absolute path)
+        os.makedirs(MODEL_DIR, exist_ok=True)
+        print(f"📁 Model directory created/verified: {MODEL_DIR}")
         
-        total = int(response.headers.get("content-length", 0))
+        # Download the model file with retry logic
+        print("🌐 Starting HTTP request...")
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                print(f"🔄 Download attempt {attempt + 1}/{max_retries}")
+                response = requests.get(MODEL_URL, stream=True, timeout=60)
+                response.raise_for_status()
+                print("✅ HTTP request successful")
+                break
+            except Exception as e:
+                print(f"❌ Download attempt {attempt + 1} failed: {e}")
+                if attempt == max_retries - 1:
+                    raise e
+                print("⏳ Waiting 5 seconds before retry...")
+                import time
+                time.sleep(5)
+        
+        # Get file size for progress
+        total_size = int(response.headers.get('content-length', 0))
         downloaded = 0
         
-        print(f"📥 Downloading model ({total / (1024*1024):.1f} MB)...")
+        print(f"📥 Downloading model ({total_size / (1024*1024):.1f} MB)...")
         
-        with open(MODEL_PATH, "wb") as f:
+        # Save EXACTLY to MODEL_PATH (absolute path)
+        with open(MODEL_PATH, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
                     f.write(chunk)
                     downloaded += len(chunk)
-                    if total > 0:
-                        progress = (downloaded / total) * 100
+                    if total_size > 0:
+                        progress = (downloaded / total_size) * 100
                         print(f"📥 Download progress: {progress:.1f}%", end='\r')
         
-        print(f"\n✅ Model downloaded: {MODEL_PATH} ({downloaded} bytes)")
+        print(f"\n✅ Model downloaded successfully: {MODEL_PATH}")
         print(f"✅ Model size: {os.path.getsize(MODEL_PATH) / (1024*1024):.1f} MB")
         
-        # Verify model exists
+        # Verify model was saved correctly
         if os.path.exists(MODEL_PATH):
-            print("✅ Model verification passed")
+            print("✅ Model saved correctly")
+            MODEL_LOADED = True
             return True
         else:
-            print("❌ Model verification failed - file not found after download")
+            print("❌ Model NOT found after download")
+            MODEL_LOADED = False
             return False
-            
+        
     except Exception as e:
-        print(f"❌ Model download FAILED: {e}")
-        # Clean up partial download
-        if os.path.exists(MODEL_PATH):
-            os.remove(MODEL_PATH)
-            print("🗑️ Cleaned up partial download")
+        print(f"❌ Failed to download model: {e}")
+        
+        # Try fallback URL if primary fails
+        print("🔄 Trying fallback URL...")
+        try:
+            response = requests.get(FALLBACK_MODEL_URL, stream=True, timeout=60)
+            response.raise_for_status()
+            print("✅ Fallback HTTP request successful")
+            
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded = 0
+            
+            print(f"📥 Downloading model from fallback ({total_size / (1024*1024):.1f} MB)...")
+            
+            with open(MODEL_PATH, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        if total_size > 0:
+                            progress = (downloaded / total_size) * 100
+                            print(f"📥 Download progress: {progress:.1f}%", end='\r')
+            
+            print(f"\n✅ Model downloaded successfully from fallback: {MODEL_PATH}")
+            print(f"✅ Model size: {os.path.getsize(MODEL_PATH) / (1024*1024):.1f} MB")
+            
+            # Verify model was saved correctly
+            if os.path.exists(MODEL_PATH):
+                print("✅ Model saved correctly from fallback")
+                MODEL_LOADED = True
+                return True
+            else:
+                print("❌ Model NOT found after fallback download")
+                MODEL_LOADED = False
+                return False
+                
+        except Exception as fallback_error:
+            print(f"❌ Fallback download also failed: {fallback_error}")
+            MODEL_LOADED = False
+            return False
+
+def initialize_inference():
+    """Initialize inference system after model is loaded"""
+    global INFERENCE_READY, INFERENCE_SYSTEM
+    
+    try:
+        print("🧠 Initializing inference system...")
+        print(f"🔍 Model file exists: {os.path.exists(MODEL_PATH)}")
+        print(f"🔍 Model path: {MODEL_PATH}")
+        
+        from inference import predict_bird_species
+        INFERENCE_SYSTEM = predict_bird_species
+        INFERENCE_READY = True
+        print("✅ Inference system loaded successfully")
+        print("🎯 Predictions are now ready!")
+        return True
+    except Exception as e:
+        INFERENCE_READY = False
+        print(f"❌ Error loading inference system: {e}")
+        print("❌ Predictions will not work until this is fixed")
         return False
 
-# SYNCHRONOUS MODEL DOWNLOAD - MUST FINISH BEFORE SERVER STARTS
-print("🚀 Starting Avian AI...")
-print("🔍 Downloading model before server startup...")
-if not download_model():
-    print("❌ Cannot start without model. Exiting.")
-    sys.exit(1)
-
-print("✅ Model ready - initializing Flask app...")
-
-# Initialize Flask app AFTER model is confirmed present
-app = Flask(__name__, static_folder='static')
-CORS(app)
-
-# NOW import inference AFTER model is confirmed present
-INFERENCE_READY = False
-INFERENCE_SYSTEM = None
-
-try:
-    print("🧠 Initializing inference system...")
-    print(f"🔍 Model file exists: {os.path.exists(MODEL_PATH)}")
-    print(f"🔍 Model path: {MODEL_PATH}")
+def initialize_model():
+    """Background thread function to download model and initialize inference"""
+    print("🚀 Starting model initialization in background...")
     
-    from inference import predict_bird_species
-    INFERENCE_SYSTEM = predict_bird_species
-    INFERENCE_READY = True
-    print("✅ Inference system loaded successfully")
-    print("🎯 Predictions are now ready!")
-except Exception as e:
-    INFERENCE_READY = False
-    print(f"❌ Error loading inference system: {e}")
-    print("❌ Predictions will not work until this is fixed")
+    # Download model first
+    if not download_model():
+        print("❌ Model download failed - inference will not work")
+        return
+    
+    # Initialize inference after model is ready
+    initialize_inference()
 
 # Configuration
 UPLOAD_FOLDER = tempfile.gettempdir()
@@ -135,7 +208,7 @@ def health_check():
     return jsonify({
         'status': 'ok',
         'inference_ready': INFERENCE_READY,
-        'model_loaded': os.path.exists(MODEL_PATH),
+        'model_loaded': MODEL_LOADED,
         'model_path': MODEL_PATH
     })
 
@@ -143,7 +216,7 @@ def health_check():
 def predict():
     """Predict bird species from audio file"""
     if not INFERENCE_READY:
-        return jsonify({'error': 'Inference system not ready'}), 500
+        return jsonify({'error': 'Inference system not ready - please try again in a moment'}), 503
     
     if not INFERENCE_SYSTEM:
         return jsonify({'error': 'Inference system not available'}), 500
@@ -275,13 +348,16 @@ def internal_error(e):
 
 if __name__ == '__main__':
     print(f"📁 Upload folder: {UPLOAD_FOLDER}")
-    print(f"🔧 Inference ready: {INFERENCE_READY}")
+    
+    # Start model initialization in background thread
+    model_thread = threading.Thread(target=initialize_model, daemon=True)
+    model_thread.start()
     
     # Use environment PORT for deployment (Render uses PORT env var)
     port = int(os.environ.get("PORT", 10000))
     
     print(f"🌐 Server will run on http://0.0.0.0:{port}")
-    print("🚀 Server starting - model already loaded!")
+    print("🚀 Server starting - model initialization in background...")
     
     app.run(
         host="0.0.0.0",
