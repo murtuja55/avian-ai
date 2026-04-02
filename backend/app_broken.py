@@ -1,5 +1,5 @@
 """
-Production API Server for Avian AI - Render Ready
+Production API Server for Avian AI - Render Optimized
 Clean Flask API for bird sound classification
 """
 
@@ -101,7 +101,8 @@ def health_check():
     """Health check endpoint"""
     return jsonify({
         'status': 'ok',
-        'inference_ready': INFERENCE_READY
+        'inference_ready': INFERENCE_READY,
+        'model_loaded': os.path.exists(MODEL_PATH)
     })
 
 @app.route('/predict', methods=['POST'])
@@ -201,6 +202,33 @@ def serve_audio(unique_id):
         print(f"❌ Audio serving error: {e}")
         return jsonify({'error': 'Failed to serve audio'}), 500
 
+@app.route('/species', methods=['GET'])
+def get_species():
+    """Get list of all bird species"""
+    try:
+        from inference import CLASS_NAMES
+        return jsonify({
+            'species': CLASS_NAMES,
+            'count': len(CLASS_NAMES)
+        })
+    except Exception as e:
+        return jsonify({'error': f'Failed to load species list: {str(e)}'}), 500
+
+@app.route('/model/info', methods=['GET'])
+def model_info():
+    """Get model information"""
+    try:
+        model_size = os.path.getsize(MODEL_PATH) / (1024*1024) if os.path.exists(MODEL_PATH) else 0
+        return jsonify({
+            'model_loaded': os.path.exists(MODEL_PATH),
+            'model_size_mb': round(model_size, 2),
+            'model_path': MODEL_PATH,
+            'inference_ready': INFERENCE_READY,
+            'supported_formats': list(ALLOWED_EXTENSIONS)
+        })
+    except Exception as e:
+        return jsonify({'error': f'Failed to get model info: {str(e)}'}), 500
+
 # Frontend serving routes
 @app.route('/')
 def serve_index():
@@ -220,6 +248,11 @@ def serve_static(path):
         # If file not found, return 404
         return jsonify({'error': 'Static file not found'}), 404
 
+@app.errorhandler(413)
+def too_large(e):
+    """Handle file too large error"""
+    return jsonify({'error': 'File too large. Maximum size is 16MB'}), 413
+
 @app.errorhandler(404)
 def not_found(e):
     """Handle not found error"""
@@ -233,11 +266,10 @@ def internal_error(e):
 if __name__ == '__main__':
     print(f"📁 Upload folder: {UPLOAD_FOLDER}")
     print(f"🔧 Inference ready: {INFERENCE_READY}")
+    print(f"🌐 Server will run on http://localhost:5000")
     
     # Use environment PORT for deployment (Render uses PORT env var)
-    port = int(os.environ.get("PORT", 10000))
-    
-    print(f"🌐 Server will run on http://0.0.0.0:{port}")
+    port = int(os.environ.get("PORT", 5000))
     
     app.run(
         host="0.0.0.0",
