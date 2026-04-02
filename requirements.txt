@@ -1,6 +1,6 @@
-# Production Requirements for Avian AI - Render Optimized
+# Production Requirements for Avian AI - Render Ready
 
-# Core ML/AI (Render Compatible)
+# Core ML/AI
 torch==2.0.1
 torchaudio==2.0.2
 librosa==0.10.1

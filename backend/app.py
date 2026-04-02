@@ -1,5 +1,5 @@
 """
-Production API Server for Avian AI - Render Ready
+Production API Server for Avian AI - 100% Render Ready
 Clean Flask API for bird sound classification
 """
 
@@ -80,6 +80,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
 # Initialize inference system AFTER model download
+INFERENCE_READY = False
 try:
     from inference import predict_bird_species
     INFERENCE_READY = True
@@ -87,6 +88,7 @@ try:
 except Exception as e:
     INFERENCE_READY = False
     print(f"❌ Error loading inference system: {e}")
+    print("⚠️  Server will start but predictions will not work")
 
 # Store uploaded files for serving
 uploaded_files = {}
@@ -101,7 +103,8 @@ def health_check():
     """Health check endpoint"""
     return jsonify({
         'status': 'ok',
-        'inference_ready': INFERENCE_READY
+        'inference_ready': INFERENCE_READY,
+        'model_loaded': os.path.exists(MODEL_PATH)
     })
 
 @app.route('/predict', methods=['POST'])
