@@ -261,8 +261,13 @@ def serve_static(path):
     try:
         return send_from_directory(app.static_folder, path)
     except Exception as e:
-        # If file not found, return 404
-        return jsonify({'error': 'Static file not found'}), 404
+        # If static file not found, return index.html for SPA routing
+        print(f"📁 Static file not found: {path}, serving index.html instead")
+        try:
+            return send_from_directory(app.static_folder, 'index.html')
+        except Exception as fallback_error:
+            print(f"❌ Fallback frontend serving error: {fallback_error}")
+            return jsonify({'error': 'Frontend not available'}), 404
 
 @app.errorhandler(404)
 def not_found(e):
