@@ -10,6 +10,7 @@ import os
 import sys
 import uuid
 import tempfile
+import requests
 from pathlib import Path
 
 # Add current directory to path
@@ -17,6 +18,57 @@ sys.path.append('.')
 
 app = Flask(__name__, static_folder='static')
 CORS(app)
+
+# Model download configuration
+MODEL_URL = os.environ.get('MODEL_URL', 'https://github.com/murtuja55/avian-ai/releases/download/v1.0.0/best_model.pth')
+MODEL_PATH = os.path.join('model', 'best_model.pth')
+
+def download_model():
+    """Download model file if not exists"""
+    if os.path.exists(MODEL_PATH):
+        print(f"✅ Model already exists: {MODEL_PATH}")
+        return True
+    
+    print("📥 Model file not found, downloading...")
+    print(f"📥 Download URL: {MODEL_URL}")
+    
+    try:
+        # Create model directory if it doesn't exist
+        os.makedirs('model', exist_ok=True)
+        
+        # Download the model file
+        response = requests.get(MODEL_URL, stream=True)
+        response.raise_for_status()
+        
+        # Get file size for progress
+        total_size = int(response.headers.get('content-length', 0))
+        downloaded = 0
+        
+        print(f"📥 Downloading model ({total_size / (1024*1024):.1f} MB)...")
+        
+        with open(MODEL_PATH, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+                    downloaded += len(chunk)
+                    if total_size > 0:
+                        progress = (downloaded / total_size) * 100
+                        print(f"📥 Download progress: {progress:.1f}%", end='\r')
+        
+        print(f"\n✅ Model downloaded successfully: {MODEL_PATH}")
+        print(f"✅ Model size: {os.path.getsize(MODEL_PATH) / (1024*1024):.1f} MB")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Failed to download model: {e}")
+        return False
+
+# Download model on startup
+print("🚀 Starting Avian AI API Server...")
+print(f"🔍 Checking model file: {MODEL_PATH}")
+if not download_model():
+    print("❌ CRITICAL: Model download failed. Server cannot start.")
+    sys.exit(1)
 
 # Configuration
 UPLOAD_FOLDER = tempfile.gettempdir()
@@ -204,7 +256,6 @@ def serve_static(path):
     return send_from_directory(app.static_folder, path)
 
 if __name__ == '__main__':
-    print("🚀 Starting Avian AI API Server...")
     print(f"📁 Upload folder: {UPLOAD_FOLDER}")
     print(f"🔧 Inference ready: {INFERENCE_READY}")
     print(f"🌐 Server will run on http://localhost:5000")
