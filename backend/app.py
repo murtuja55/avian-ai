@@ -18,6 +18,10 @@ from pathlib import Path
 # Add current directory to path
 sys.path.append('.')
 
+# Print Python version for debugging
+print(f"🐍 Python version: {sys.version}")
+print(f"🐍 Python executable: {sys.executable}")
+
 app = Flask(__name__, static_folder='static')
 CORS(app)
 
@@ -34,6 +38,8 @@ def download_model():
     """Download model file if not exists"""
     global MODEL_LOADED
     
+    print(f"🔍 Checking model path: {MODEL_PATH}")
+    
     if os.path.exists(MODEL_PATH):
         print(f"✅ Model already exists: {MODEL_PATH}")
         print(f"✅ Model size: {os.path.getsize(MODEL_PATH) / (1024*1024):.1f} MB")
@@ -42,14 +48,18 @@ def download_model():
     
     print("📥 Model file not found, downloading...")
     print(f"📥 Download URL: {MODEL_URL}")
+    print(f"📥 Target path: {MODEL_PATH}")
     
     try:
         # Create model directory if it doesn't exist
         os.makedirs('model', exist_ok=True)
+        print("📁 Model directory created/verified")
         
         # Download the model file
+        print("🌐 Starting HTTP request...")
         response = requests.get(MODEL_URL, stream=True, timeout=30)
         response.raise_for_status()
+        print("✅ HTTP request successful")
         
         # Get file size for progress
         total_size = int(response.headers.get('content-length', 0))
@@ -82,14 +92,19 @@ def initialize_inference():
     
     try:
         print("🧠 Initializing inference system...")
+        print(f"🔍 Model file exists: {os.path.exists(MODEL_PATH)}")
+        print(f"🔍 Model path: {MODEL_PATH}")
+        
         from inference import predict_bird_species
         INFERENCE_SYSTEM = predict_bird_species
         INFERENCE_READY = True
         print("✅ Inference system loaded successfully")
+        print("🎯 Predictions are now ready!")
         return True
     except Exception as e:
         INFERENCE_READY = False
         print(f"❌ Error loading inference system: {e}")
+        print("❌ Predictions will not work until this is fixed")
         return False
 
 def initialize_model():
