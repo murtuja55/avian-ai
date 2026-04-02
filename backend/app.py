@@ -3,23 +3,26 @@ Production API Server for Avian AI - Synchronous Model Loading
 Clean Flask API for bird sound classification
 """
 
+import sys
+import os
+
+# Set absolute base directory and ensure it's in Python path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+print(f"🐍 Python version: {sys.version}")
+print(f"🐍 Python executable: {sys.executable}")
+print(f"📁 BASE_DIR: {BASE_DIR}")
+print(f"🐍 Python path includes BASE_DIR: {BASE_DIR in sys.path}")
+
 from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
-import os
-import sys
 import uuid
 import tempfile
 import requests
 from pathlib import Path
-
-# Print Python version for debugging
-print(f"🐍 Python version: {sys.version}")
-print(f"🐍 Python executable: {sys.executable}")
-
-# Set absolute base directory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-print(f"📁 BASE_DIR: {BASE_DIR}")
 
 # Model configuration with absolute paths
 MODEL_DIR = os.path.join(BASE_DIR, "model")

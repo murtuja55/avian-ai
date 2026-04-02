@@ -13,6 +13,10 @@ import logging
 import warnings
 warnings.filterwarnings('ignore')
 
+# Get absolute base directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+print(f"🧠 Inference BASE_DIR: {BASE_DIR}")
+
 # Import librosa
 try:
     import librosa
@@ -114,11 +118,11 @@ class BirdClassifier:
         self.class_names = []
         self.processor = AudioProcessor()
         
-        # Default paths
+        # Default paths using absolute BASE_DIR
         if model_path is None:
-            model_path = Path(__file__).parent / "model" / "best_model.pth"
+            model_path = os.path.join(BASE_DIR, "model", "best_model.pth")
         if class_names_path is None:
-            class_names_path = Path(__file__).parent.parent / "data" / "dataset_50_meaningful_species" / "dataset_metadata.json"
+            class_names_path = os.path.join(BASE_DIR, "..", "data", "dataset_50_meaningful_species", "dataset_metadata.json")
         
         self.load_model(model_path, class_names_path)
     
