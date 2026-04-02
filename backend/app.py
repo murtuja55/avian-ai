@@ -22,12 +22,20 @@ sys.path.append('.')
 print(f"🐍 Python version: {sys.version}")
 print(f"🐍 Python executable: {sys.executable}")
 
+# Set absolute base directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+print(f"📁 BASE_DIR: {BASE_DIR}")
+
 app = Flask(__name__, static_folder='static')
 CORS(app)
 
-# Model download configuration
+# Model download configuration with absolute paths
 MODEL_URL = os.environ.get('MODEL_URL', 'https://github.com/murtuja55/avian-ai/releases/download/v1.0.0/best_model.pth')
-MODEL_PATH = os.path.join('model', 'best_model.pth')
+MODEL_DIR = os.path.join(BASE_DIR, "model")
+MODEL_PATH = os.path.join(MODEL_DIR, "best_model.pth")
+print(f"📁 MODEL_DIR: {MODEL_DIR}")
+print(f"📁 MODEL_PATH: {MODEL_PATH}")
+print(f"📁 Exists: {os.path.exists(MODEL_PATH)}")
 
 # Global inference variables
 INFERENCE_READY = False
@@ -51,9 +59,9 @@ def download_model():
     print(f"📥 Target path: {MODEL_PATH}")
     
     try:
-        # Create model directory if it doesn't exist
-        os.makedirs('model', exist_ok=True)
-        print("📁 Model directory created/verified")
+        # Create model directory if it doesn't exist (using absolute path)
+        os.makedirs(MODEL_DIR, exist_ok=True)
+        print(f"📁 Model directory created/verified: {MODEL_DIR}")
         
         # Download the model file
         print("🌐 Starting HTTP request...")
@@ -67,6 +75,7 @@ def download_model():
         
         print(f"📥 Downloading model ({total_size / (1024*1024):.1f} MB)...")
         
+        # Save EXACTLY to MODEL_PATH (absolute path)
         with open(MODEL_PATH, 'wb') as f:
             for chunk in response.iter_content(chunk_size=8192):
                 if chunk:
@@ -78,8 +87,16 @@ def download_model():
         
         print(f"\n✅ Model downloaded successfully: {MODEL_PATH}")
         print(f"✅ Model size: {os.path.getsize(MODEL_PATH) / (1024*1024):.1f} MB")
-        MODEL_LOADED = True
-        return True
+        
+        # Verify model was saved correctly
+        if os.path.exists(MODEL_PATH):
+            print("✅ Model saved correctly")
+            MODEL_LOADED = True
+            return True
+        else:
+            print("❌ Model NOT found after download")
+            MODEL_LOADED = False
+            return False
         
     except Exception as e:
         print(f"❌ Failed to download model: {e}")
