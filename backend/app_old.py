@@ -1,5 +1,5 @@
 """
-Production API Server for Avian AI - Render Optimized
+Production API Server for Avian AI Frontend
 Clean Flask API for bird sound classification
 """
 
@@ -27,7 +27,6 @@ def download_model():
     """Download model file if not exists"""
     if os.path.exists(MODEL_PATH):
         print(f"✅ Model already exists: {MODEL_PATH}")
-        print(f"✅ Model size: {os.path.getsize(MODEL_PATH) / (1024*1024):.1f} MB")
         return True
     
     print("📥 Model file not found, downloading...")
@@ -38,7 +37,7 @@ def download_model():
         os.makedirs('model', exist_ok=True)
         
         # Download the model file
-        response = requests.get(MODEL_URL, stream=True, timeout=30)
+        response = requests.get(MODEL_URL, stream=True)
         response.raise_for_status()
         
         # Get file size for progress
@@ -64,7 +63,7 @@ def download_model():
         print(f"❌ Failed to download model: {e}")
         return False
 
-# Download model on startup - BEFORE inference import
+# Download model on startup
 print("🚀 Starting Avian AI API Server...")
 print(f"🔍 Checking model file: {MODEL_PATH}")
 if not download_model():
@@ -79,7 +78,7 @@ MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 
-# Initialize inference system AFTER model download
+# Initialize inference system
 try:
     from inference import predict_bird_species
     INFERENCE_READY = True
@@ -87,9 +86,6 @@ try:
 except Exception as e:
     INFERENCE_READY = False
     print(f"❌ Error loading inference system: {e}")
-
-# Store uploaded files for serving
-uploaded_files = {}
 
 def allowed_file(filename):
     """Check if file has allowed extension"""
@@ -100,10 +96,13 @@ def allowed_file(filename):
 def health_check():
     """Health check endpoint"""
     return jsonify({
-        'status': 'ok',
+        'status': 'healthy',
         'inference_ready': INFERENCE_READY,
-        'model_loaded': os.path.exists(MODEL_PATH)
+        'version': '1.0.0'
     })
+
+# Store uploaded files for serving
+uploaded_files = {}
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -199,54 +198,36 @@ def serve_audio(unique_id):
                 return send_file(audio_path, as_attachment=False, mimetype='audio/mpeg')
         return jsonify({'error': 'Audio file not found'}), 404
     except Exception as e:
-        print(f"❌ Audio serving error: {e}")
-        return jsonify({'error': 'Failed to serve audio'}), 500
+        return jsonify({'error': f'Failed to serve audio: {str(e)}'}), 500
 
 @app.route('/species', methods=['GET'])
 def get_species():
-    """Get list of all bird species"""
+    """Get list of supported bird species"""
     try:
-        from inference import CLASS_NAMES
+        from inference import get_classifier
+        classifier = get_classifier()
         return jsonify({
-            'species': CLASS_NAMES,
-            'count': len(CLASS_NAMES)
+            'species': classifier.class_names,
+            'count': len(classifier.class_names)
         })
     except Exception as e:
-        return jsonify({'error': f'Failed to load species list: {str(e)}'}), 500
+        return jsonify({'error': f'Failed to get species list: {str(e)}'}), 500
 
 @app.route('/model/info', methods=['GET'])
 def model_info():
     """Get model information"""
     try:
-        model_size = os.path.getsize(MODEL_PATH) / (1024*1024) if os.path.exists(MODEL_PATH) else 0
+        from inference import get_classifier
+        classifier = get_classifier()
         return jsonify({
-            'model_loaded': os.path.exists(MODEL_PATH),
-            'model_size_mb': round(model_size, 2),
-            'model_path': MODEL_PATH,
-            'inference_ready': INFERENCE_READY,
-            'supported_formats': list(ALLOWED_EXTENSIONS)
+            'model_loaded': classifier.model is not None,
+            'device': str(classifier.device),
+            'num_classes': len(classifier.class_names),
+            'sample_rate': classifier.processor.sample_rate,
+            'n_mels': classifier.processor.n_mels
         })
     except Exception as e:
         return jsonify({'error': f'Failed to get model info: {str(e)}'}), 500
-
-# Frontend serving routes
-@app.route('/')
-def serve_index():
-    """Serve the main frontend page"""
-    try:
-        return send_from_directory(app.static_folder, 'index.html')
-    except Exception as e:
-        print(f"❌ Frontend serving error: {e}")
-        return jsonify({'error': 'Frontend not available'}), 404
-
-@app.route('/<path:path>')
-def serve_static(path):
-    """Serve static frontend files"""
-    try:
-        return send_from_directory(app.static_folder, path)
-    except Exception as e:
-        # If file not found, return 404
-        return jsonify({'error': 'Static file not found'}), 404
 
 @app.errorhandler(413)
 def too_large(e):
@@ -263,16 +244,27 @@ def internal_error(e):
     """Handle internal server error"""
     return jsonify({'error': 'Internal server error'}), 500
 
+# Frontend serving routes
+@app.route('/')
+def serve_index():
+    """Serve the main frontend page"""
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    """Serve static frontend files"""
+    return send_from_directory(app.static_folder, path)
+
 if __name__ == '__main__':
     print(f"📁 Upload folder: {UPLOAD_FOLDER}")
     print(f"🔧 Inference ready: {INFERENCE_READY}")
     print(f"🌐 Server will run on http://localhost:5000")
     
-    # Use environment PORT for deployment (Render uses PORT env var)
-    port = int(os.environ.get("PORT", 5000))
+    # Use environment PORT for deployment
+    port = int(os.environ.get('PORT', 5000))
     
     app.run(
-        host="0.0.0.0",
+        host='0.0.0.0',
         port=port,
         debug=False,
         threaded=True
