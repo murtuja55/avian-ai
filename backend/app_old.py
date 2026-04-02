@@ -11,8 +11,6 @@ import sys
 import uuid
 import tempfile
 import requests
-import threading
-import time
 from pathlib import Path
 
 # Add current directory to path
@@ -25,19 +23,11 @@ CORS(app)
 MODEL_URL = os.environ.get('MODEL_URL', 'https://github.com/murtuja55/avian-ai/releases/download/v1.0.0/best_model.pth')
 MODEL_PATH = os.path.join('model', 'best_model.pth')
 
-# Global inference variables
-INFERENCE_READY = False
-INFERENCE_SYSTEM = None
-MODEL_LOADED = False
-
 def download_model():
     """Download model file if not exists"""
-    global MODEL_LOADED
-    
     if os.path.exists(MODEL_PATH):
         print(f"✅ Model already exists: {MODEL_PATH}")
         print(f"✅ Model size: {os.path.getsize(MODEL_PATH) / (1024*1024):.1f} MB")
-        MODEL_LOADED = True
         return True
     
     print("📥 Model file not found, downloading...")
@@ -68,41 +58,18 @@ def download_model():
         
         print(f"\n✅ Model downloaded successfully: {MODEL_PATH}")
         print(f"✅ Model size: {os.path.getsize(MODEL_PATH) / (1024*1024):.1f} MB")
-        MODEL_LOADED = True
         return True
         
     except Exception as e:
         print(f"❌ Failed to download model: {e}")
-        MODEL_LOADED = False
         return False
 
-def initialize_inference():
-    """Initialize inference system after model is loaded"""
-    global INFERENCE_READY, INFERENCE_SYSTEM
-    
-    try:
-        print("🧠 Initializing inference system...")
-        from inference import predict_bird_species
-        INFERENCE_SYSTEM = predict_bird_species
-        INFERENCE_READY = True
-        print("✅ Inference system loaded successfully")
-        return True
-    except Exception as e:
-        INFERENCE_READY = False
-        print(f"❌ Error loading inference system: {e}")
-        return False
-
-def initialize_model():
-    """Background thread function to download model and initialize inference"""
-    print("🚀 Starting model initialization in background...")
-    
-    # Download model first
-    if not download_model():
-        print("❌ Model download failed - inference will not work")
-        return
-    
-    # Initialize inference after model is ready
-    initialize_inference()
+# Download model on startup - BEFORE inference import
+print("🚀 Starting Avian AI API Server...")
+print(f"🔍 Checking model file: {MODEL_PATH}")
+if not download_model():
+    print("❌ CRITICAL: Model download failed. Server cannot start.")
+    sys.exit(1)
 
 # Configuration
 UPLOAD_FOLDER = tempfile.gettempdir()
@@ -111,6 +78,17 @@ MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
+
+# Initialize inference system AFTER model download
+INFERENCE_READY = False
+try:
+    from inference import predict_bird_species
+    INFERENCE_READY = True
+    print("✅ Inference system loaded successfully")
+except Exception as e:
+    INFERENCE_READY = False
+    print(f"❌ Error loading inference system: {e}")
+    print("⚠️  Server will start but predictions will not work")
 
 # Store uploaded files for serving
 uploaded_files = {}
@@ -126,18 +104,14 @@ def health_check():
     return jsonify({
         'status': 'ok',
         'inference_ready': INFERENCE_READY,
-        'model_loaded': MODEL_LOADED,
-        'model_path': MODEL_PATH
+        'model_loaded': os.path.exists(MODEL_PATH)
     })
 
 @app.route('/predict', methods=['POST'])
 def predict():
     """Predict bird species from audio file"""
     if not INFERENCE_READY:
-        return jsonify({'error': 'Inference system not ready - please try again in a moment'}), 503
-    
-    if not INFERENCE_SYSTEM:
-        return jsonify({'error': 'Inference system not available'}), 500
+        return jsonify({'error': 'Inference system not ready'}), 500
     
     try:
         # Check if file is in request
@@ -174,7 +148,7 @@ def predict():
         try:
             # Make prediction
             print("🧠 Starting prediction...")
-            prediction = INFERENCE_SYSTEM(temp_path)
+            prediction = predict_bird_species(temp_path)
             
             # Debug logging
             print("Prediction result:", prediction)
@@ -233,7 +207,7 @@ def serve_audio(unique_id):
 # Frontend serving routes
 @app.route('/')
 def serve_index():
-    """Serve main frontend page"""
+    """Serve the main frontend page"""
     try:
         return send_from_directory(app.static_folder, 'index.html')
     except Exception as e:
@@ -261,16 +235,12 @@ def internal_error(e):
 
 if __name__ == '__main__':
     print(f"📁 Upload folder: {UPLOAD_FOLDER}")
-    
-    # Start model initialization in background thread
-    model_thread = threading.Thread(target=initialize_model, daemon=True)
-    model_thread.start()
+    print(f"🔧 Inference ready: {INFERENCE_READY}")
     
     # Use environment PORT for deployment (Render uses PORT env var)
     port = int(os.environ.get("PORT", 10000))
     
     print(f"🌐 Server will run on http://0.0.0.0:{port}")
-    print("🚀 Server starting - model initialization in background...")
     
     app.run(
         host="0.0.0.0",
