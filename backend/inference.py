@@ -38,6 +38,7 @@ class BirdModel(nn.Module):
         self.backbone = models.resnet18(weights=None)
         num_features = self.backbone.fc.in_features
         self.backbone.fc = nn.Linear(num_features, num_classes)
+        torch.set_grad_enabled(False)  # CRITICAL: Disable gradients to save memory
         self.dropout = nn.Dropout(0.5)
     
     def forward(self, x):
@@ -133,7 +134,8 @@ class BirdClassifier:
             self.model = BirdModel(num_classes=50).to(self.device)
             
             if os.path.exists(model_path):
-                checkpoint = torch.load(model_path, map_location=self.device)
+                checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
+                self.model.eval()
                 
                 # Check if it's a full checkpoint or just state dict
                 if 'model_state_dict' in checkpoint:
@@ -215,6 +217,10 @@ class BirdClassifier:
         except Exception as e:
             logger.error(f"Prediction error: {str(e)}")
             return {"error": f"Prediction failed: {str(e)}"}
+        finally:
+            # CRITICAL: Free memory after every prediction
+            import gc
+            gc.collect()
 
 # Global classifier instance
 _classifier = None
@@ -228,8 +234,11 @@ def get_classifier():
 
 def predict_bird_species(audio_path):
     """Convenience function for prediction"""
+    import gc
     classifier = get_classifier()
-    return classifier.predict(audio_path)
+    result = classifier.predict(audio_path)
+    gc.collect()  # CRITICAL: Free memory after prediction
+    return result
 
 if __name__ == "__main__":
     # Test the classifier

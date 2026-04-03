@@ -6,6 +6,12 @@ Clean Flask API for bird sound classification
 import sys
 import os
 
+# CRITICAL: Reduce memory usage for Render 512MB limit
+os.environ['OMP_NUM_THREADS'] = '1'
+os.environ['MKL_NUM_THREADS'] = '1'
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+os.environ['NUMEXPR_NUM_THREADS'] = '1'
+
 # Set absolute base directory and ensure it's in Python path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 if BASE_DIR not in sys.path:
@@ -14,6 +20,7 @@ if BASE_DIR not in sys.path:
 print(f"🐍 Python version: {sys.version}")
 print(f"🐍 Python executable: {sys.executable}")
 print(f"📁 BASE_DIR: {BASE_DIR}")
+print(f"🧠 Memory optimization: Single-threaded mode enabled")
 print(f"🐍 Python path includes BASE_DIR: {BASE_DIR in sys.path}")
 
 from flask import Flask, request, jsonify, send_file, send_from_directory
