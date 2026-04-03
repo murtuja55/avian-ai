@@ -158,7 +158,10 @@ def predict_bird(audio_file):
         model = load_model()
         global _processor
         
-        print(f"🎵 Processing audio: {audio_file}")
+        print(f"🎵 Audio file details:")
+        print(f"  - Name: {audio_file}")
+        print(f"  - Size: {audio_file.size} bytes")
+        print(f"  - Type: {type(audio_file)}")
         
         # Process audio
         audio_tensor = _processor.load_and_preprocess(audio_file)
@@ -166,6 +169,7 @@ def predict_bird(audio_file):
             print("❌ Audio processing failed")
             return "Error: Failed to process audio file"
         
+        print(f"🧠 Audio tensor shape: {audio_tensor.shape}")
         print("🧠 Running prediction...")
         
         # Make prediction
@@ -194,10 +198,14 @@ def predict_bird(audio_file):
         result += "\n".join(top3_predictions)
         
         print(f"✅ Prediction successful: {predicted_class}")
+        print(f"✅ Confidence: {confidence_score:.3f}")
         return result
         
     except Exception as e:
         print(f"❌ Prediction error: {str(e)}")
+        print(f"❌ Error type: {type(e)}")
+        import traceback
+        print(f"❌ Full traceback: {traceback.format_exc()}")
         return f"Error: {str(e)}"
     finally:
         # Cleanup
