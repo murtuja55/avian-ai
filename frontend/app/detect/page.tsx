@@ -58,23 +58,23 @@ export default function DetectPage() {
         
         const resp: PredictResponse = await predictBirdAudio({
           file,
-          apiBaseUrl,
+          apiBaseUrl, // Keep for compatibility, but HF Spaces API will be used
           signal: controller.signal,
         });
 
         console.log("✅ Prediction received:", resp);
 
-        // Get prediction from response
+        // Get prediction from HF Spaces response
         if (resp.success && resp.prediction) {
           setBird(resp.prediction);
           setConfidence(resp.confidence || 0);
-          // Use actual audio URL from backend
-          if (resp.audio_url) {
-            const audioUrl = resp.audio_url.startsWith('http') 
-              ? resp.audio_url 
-              : resp.audio_url;
+          
+          // HF Spaces doesn't return audio_url, so we'll create a local URL
+          if (file) {
+            const audioUrl = URL.createObjectURL(file);
             setAudioSrc(audioUrl);
           }
+          
           // Create dummy image URL for now
           setImageSrc("/api/bird-image");
           setStatus("ready");

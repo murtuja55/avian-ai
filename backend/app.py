@@ -102,7 +102,7 @@ print("✅ Model ready - initializing Flask app...")
 
 # Initialize Flask app AFTER model is confirmed present
 app = Flask(__name__, static_folder='static')
-CORS(app)
+CORS(app, origins=["*"])
 
 # NOW import inference AFTER model is confirmed present
 INFERENCE_READY = False
