@@ -1,0 +1,17 @@
+# Hugging Face Spaces Requirements for Avian AI - Python 3.13 Compatible
+
+# Core ML/AI - Latest versions compatible with Python 3.13
+torch
+torchvision
+torchaudio
+librosa==0.10.1
+numpy
+
+# Web Interface
+gradio==4.0.0
+
+# Audio Processing
+soundfile==0.12.2
+
+# CPU-only dependencies
+scipy
