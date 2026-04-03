@@ -16,7 +16,7 @@ export async function predictBirdAudio(params: {
   signal?: AbortSignal;
 }): Promise<PredictResponse> {
   // Use Hugging Face Spaces API with /predict endpoint
-  const hfApiUrl = "https://murtu55-avian-ai-backend.hf.space/predict";
+  const hfApiUrl = (params.apiBaseUrl || "https://murtu55-avian-ai-backend.hf.space") + "/predict";
   
   console.log(" Uploading file:", params.file.name);
   console.log(" HF API URL:", hfApiUrl);
