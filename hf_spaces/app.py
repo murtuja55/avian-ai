@@ -1,16 +1,17 @@
 """
-Hugging Face Spaces Backend for Avian AI
-Bird Sound Recognition with Gradio Interface
+Flask Backend for Hugging Face Spaces - Bird Sound Recognition
+Alternative to Gradio with REST API endpoints
 """
 
-import gradio as gr
-import torch
-import torchaudio
-import librosa
-import numpy as np
 import os
 import sys
-from pathlib import Path
+import tempfile
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import torch
+import librosa
+import numpy as np
+from werkzeug.utils import secure_filename
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -52,15 +53,14 @@ class BirdModel(torch.nn.Module):
         return x
 
 class AudioProcessor:
-    """Audio processing for bird sound classification"""
+    """Audio processing for bird sound recognition"""
     
-    def __init__(self, sample_rate=22050, duration=5.0):
-        self.sample_rate = sample_rate
-        self.duration = duration
+    def __init__(self):
+        self.sample_rate = 22050
         self.n_mels = 128
         self.n_fft = 2048
         self.hop_length = 512
-        self.target_length = 128
+        self.duration = 5.0
     
     def load_and_preprocess(self, audio_path):
         """Load and preprocess audio file"""
@@ -114,7 +114,7 @@ class AudioProcessor:
             print(f"Error processing audio: {e}")
             return None
 
-# Global variables for lazy loading
+# Global variables
 _model = None
 _processor = None
 
@@ -135,13 +135,8 @@ def load_model():
         # Load model
         _model = BirdModel(num_classes=50).to(device)
         
-        # Load state dict with compatibility for different PyTorch versions
-        try:
-            checkpoint = torch.load(MODEL_PATH, map_location=device, weights_only=False)
-        except:
-            # Fallback for newer PyTorch versions
-            checkpoint = torch.load(MODEL_PATH, map_location=device)
-        
+        # Load state dict
+        checkpoint = torch.load(MODEL_PATH, map_location=device)
         if 'model_state_dict' in checkpoint:
             _model.load_state_dict(checkpoint['model_state_dict'])
         else:
@@ -154,19 +149,25 @@ def load_model():
         raise RuntimeError(f"Failed to load model: {e}")
 
 def predict_bird(audio_file):
-    """Main prediction function for Gradio"""
+    """Main prediction function"""
     if audio_file is None:
-        return "Please upload an audio file"
+        return {"error": "Please upload an audio file"}
     
     try:
         # Load model lazily
         model = load_model()
         global _processor
         
+        print(f"🎵 Processing audio: {audio_file}")
+        
         # Process audio
         audio_tensor = _processor.load_and_preprocess(audio_file)
         if audio_tensor is None:
-            return "Error: Failed to process audio file"
+            print("❌ Audio processing failed")
+            return {"error": "Failed to process audio file"}
+        
+        print(f"🧠 Audio tensor shape: {audio_tensor.shape}")
+        print("🧠 Running prediction...")
         
         # Make prediction
         with torch.no_grad():
@@ -185,51 +186,118 @@ def predict_bird(audio_file):
         for i in range(3):
             class_name = CLASS_NAMES[top3_indices[0][i].item()]
             prob = top3_probs[0][i].item()
-            top3_predictions.append(f"{i+1}. {class_name} ({prob:.3f})")
+            top3_predictions.append({
+                "label": class_name,
+                "confidence": prob
+            })
         
-        # Format output
-        result = f"**Prediction:** {predicted_class}\n"
-        result += f"**Confidence:** {confidence_score:.3f} ({confidence_score*100:.1f}%)\n\n"
-        result += "**Top 3 Predictions:**\n"
-        result += "\n".join(top3_predictions)
+        result = {
+            "success": True,
+            "prediction": predicted_class,
+            "confidence": confidence_score,
+            "top_predictions": top3_predictions
+        }
         
+        print(f"✅ Prediction successful: {predicted_class}")
+        print(f"✅ Confidence: {confidence_score:.3f}")
         return result
         
     except Exception as e:
-        return f"Error: {str(e)}"
+        print(f"❌ Prediction error: {str(e)}")
+        print(f"❌ Error type: {type(e)}")
+        import traceback
+        print(f"❌ Full traceback: {traceback.format_exc()}")
+        return {"error": str(e)}
     finally:
         # Cleanup
         import gc
         gc.collect()
 
-# Create Gradio interface
-def create_interface():
-    """Create and return Gradio interface"""
-    
-    interface = gr.Interface(
-        fn=predict_bird,
-        inputs=gr.Audio(
-            sources=["upload", "microphone"],
-            type="filepath",
-            label="Upload Bird Audio File"
-        ),
-        outputs=gr.Textbox(
-            label="Prediction Results",
-            lines=8,
-            max_lines=10
-        ),
-        title="🐦 Avian AI - Bird Sound Recognition",
-        description="Upload an audio file of a bird sound to identify the species. Works with common bird species with high accuracy.",
-        allow_flagging="never"
-    )
-    
-    return interface
+# Initialize Flask app
+app = Flask(__name__)
+CORS(app, origins=["*"])
 
-# Launch the interface
-if __name__ == "__main__":
-    interface = create_interface()
-    interface.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
-        show_error=True
+# Configuration
+UPLOAD_FOLDER = tempfile.gettempdir()
+ALLOWED_EXTENSIONS = {'wav', 'mp3', 'flac', 'm4a', 'ogg'}
+MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
+
+def allowed_file(filename):
+    """Check if file has allowed extension"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/predict', methods=['POST', 'OPTIONS'])
+def predict():
+    """Main prediction endpoint"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
+    try:
+        # Check if file is in request
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file provided'}), 400
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+        
+        if not allowed_file(file.filename):
+            return jsonify({'error': 'Invalid file format. Allowed: WAV, MP3, FLAC, M4A, OGG'}), 400
+        
+        # Save file temporarily
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        try:
+            # Make prediction
+            result = predict_bird(filepath)
+            
+            if 'error' in result:
+                return jsonify(result), 500
+            
+            return jsonify(result)
+            
+        finally:
+            # Clean up temporary file
+            if os.path.exists(filepath):
+                os.remove(filepath)
+                
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/health', methods=['GET'])
+def health():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'ok',
+        'model_loaded': os.path.exists(MODEL_PATH),
+        'service': 'avian-ai-backend'
+    })
+
+@app.route('/', methods=['GET'])
+def home():
+    """Home endpoint"""
+    return jsonify({
+        'message': 'Avian AI Backend API',
+        'endpoints': {
+            '/predict': 'POST - Upload audio file for bird species prediction',
+            '/health': 'GET - Health check'
+        }
+    })
+
+if __name__ == '__main__':
+    print("🚀 Starting Avian AI Flask Backend...")
+    print(f"📁 Model path: {MODEL_PATH}")
+    print(f"📁 Model exists: {os.path.exists(MODEL_PATH)}")
+    
+    app.run(
+        host="0.0.0.0",
+        port=7860,
+        debug=False
     )
