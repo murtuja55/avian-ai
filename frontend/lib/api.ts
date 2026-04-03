@@ -15,17 +15,18 @@ export async function predictBirdAudio(params: {
   apiBaseUrl?: string;
   signal?: AbortSignal;
 }): Promise<PredictResponse> {
-  // Use Hugging Face Spaces API
-  const hfApiUrl = "https://murtu55-avian-ai-backend.hf.space/run/predict";
+  // Use Hugging Face Spaces API with /predict endpoint
+  const hfApiUrl = "https://murtu55-avian-ai-backend.hf.space/predict";
   
   console.log(" Uploading file:", params.file.name);
   console.log(" HF API URL:", hfApiUrl);
 
   try {
-    // Convert file to base64
-    const base64 = await fileToBase64(params.file);
+    // Create FormData for file upload
+    const form = new FormData();
+    form.append("file", params.file, params.file.name);
     
-    console.log(" Sending base64 data to HF Spaces...");
+    console.log(" Sending file data to HF Spaces...");
     
     // Create timeout controller
     const controller = new AbortController();
@@ -33,12 +34,7 @@ export async function predictBirdAudio(params: {
     
     const res = await fetch(hfApiUrl, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        "data": [base64]
-      }),
+      body: form,
       signal: params.signal || controller.signal,
     });
 
@@ -72,36 +68,19 @@ export async function predictBirdAudio(params: {
       data = await res.json();
       console.log(" HF Spaces API RESPONSE:", data);
     } catch (jsonError) {
-      console.error(" JSON Parse Error:", jsonError);
+      console.error("❌ JSON Parse Error:", jsonError);
       throw new Error("Invalid response format from HF Spaces");
     }
 
-    // Handle HF Spaces response format
-    if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
-      console.error(" Invalid HF Spaces response:", data);
-      throw new Error("No prediction data received from HF Spaces");
+    // Handle Flask API response format
+    if (!data.success) {
+      console.error("❌ API Error:", data.error);
+      throw new Error(data.error || "Prediction failed");
     }
 
-    // Parse the prediction result from HF Spaces
-    const predictionText = data.data[0];
-    console.log(" Prediction text:", predictionText);
-
-    // Extract bird species and confidence from the text
-    const predictionMatch = predictionText.match(/\*\*Prediction:\*\* (.+)/);
-    const confidenceMatch = predictionText.match(/\*\*Confidence:\*\* ([\d.]+)/);
-    
-    const bird = predictionMatch ? predictionMatch[1].trim() : "Unknown";
-    const confidence = confidenceMatch ? parseFloat(confidenceMatch[1]) : 0;
-
-    return {
-      success: true,
-      prediction: bird,
-      confidence: confidence,
-      top_predictions: [], // HF Spaces returns formatted text, not structured data
-      audio_url: undefined, // HF Spaces doesn't return audio URL
-    };
+    return data;
   } catch (error) {
-    console.error(" Fetch Error:", error);
+    console.error("❌ Fetch Error:", error);
     
     // Handle specific error types
     if (error instanceof Error) {
@@ -118,21 +97,6 @@ export async function predictBirdAudio(params: {
       throw new Error("Unknown error occurred");
     }
   }
-}
-
-// Helper function to convert file to base64
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      // Get the base64 part (remove data:audio/...;base64, prefix)
-      const base64Data = reader.result as string;
-      const base64 = base64Data.split(',')[1];
-      resolve(base64);
-    };
-    reader.onerror = error => reject(error);
-    reader.readAsDataURL(file);
-  });
 }
 
 export function resolveImageUrl(apiBaseUrl: string, imageUrl: string) {
