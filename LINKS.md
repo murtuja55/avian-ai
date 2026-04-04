@@ -20,6 +20,6 @@
 - **Discussions**: [Ask a question](https://github.com/murtuja55/avian-ai/discussions)
 
 ## 📞 Contact
-- **Author**: Murtuja Husenov
-- **Email**: your-email@example.com
+- **Author**: Murtuja 
+- **Email**: murtujashaik554@gmail.com
 - **GitHub**: [@murtuja55](https://github.com/murtuja55)
